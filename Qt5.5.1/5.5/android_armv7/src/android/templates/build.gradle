@@ -63,4 +63,13 @@ android {
         minSdkVersion 15
         targetSdkVersion 15
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+    }
+
+    dexOptions {
+        javaMaxHeapSize "4g"
+        preDexLibraries true
+    }
 }

@@ -43,11 +43,10 @@ import java.util.HashMap;
 
 import android.app.Application;
 
-public class QtApplication extends Application
-{
+public class QtApplication extends Application {
     public final static String QtTAG = "Qt";
     public static Object m_delegateObject = null;
-    public static HashMap<String, ArrayList<Method>> m_delegateMethods= new HashMap<String, ArrayList<Method>>();
+    public static HashMap<String, ArrayList<Method>> m_delegateMethods = new HashMap<String, ArrayList<Method>>();
     public static Method dispatchKeyEvent = null;
     public static Method dispatchPopulateAccessibilityEvent = null;
     public static Method dispatchTouchEvent = null;
@@ -65,20 +64,21 @@ public class QtApplication extends Application
     public static Method dispatchGenericMotionEvent = null;
     public static Method onGenericMotionEvent = null;
 
-    public static void setQtActivityDelegate(Object listener)
-    {
+    public static void setQtActivityDelegate(Object listener) {
         QtApplication.m_delegateObject = listener;
 
         ArrayList<Method> delegateMethods = new ArrayList<Method>();
         for (Method m : listener.getClass().getMethods()) {
-            if (m.getDeclaringClass().getName().startsWith("org.qtproject.qt5.android"))
+            if (m.getDeclaringClass().getName().startsWith("org.qtproject.qt5.android")) {
                 delegateMethods.add(m);
+            }
         }
 
         ArrayList<Field> applicationFields = new ArrayList<Field>();
         for (Field f : QtApplication.class.getFields()) {
-            if (f.getDeclaringClass().getName().equals(QtApplication.class.getName()))
+            if (f.getDeclaringClass().getName().equals(QtApplication.class.getName())) {
                 applicationFields.add(f);
+            }
         }
 
         for (Method delegateMethod : delegateMethods) {
@@ -91,7 +91,7 @@ public class QtApplication extends Application
                     delegateSet.add(delegateMethod);
                     QtApplication.m_delegateMethods.put(delegateMethod.getName(), delegateSet);
                 }
-                for (Field applicationField:applicationFields) {
+                for (Field applicationField : applicationFields) {
                     if (applicationField.getName().equals(delegateMethod.getName())) {
                         try {
                             applicationField.set(null, delegateMethod);
@@ -107,35 +107,37 @@ public class QtApplication extends Application
 
     @Override
     public void onTerminate() {
-        if (m_delegateObject != null && m_delegateMethods.containsKey("onTerminate"))
+        if (m_delegateObject != null && m_delegateMethods.containsKey("onTerminate")) {
             invokeDelegateMethod(m_delegateMethods.get("onTerminate").get(0));
+        }
         super.onTerminate();
     }
 
-    public static class InvokeResult
-    {
+    public static class InvokeResult {
         public boolean invoked = false;
         public Object methodReturns = null;
     }
 
-    private static int stackDeep=-1;
-    public static InvokeResult invokeDelegate(Object... args)
-    {
+    private static int stackDeep = -1;
+
+    public static InvokeResult invokeDelegate(Object... args) {
         InvokeResult result = new InvokeResult();
-        if (m_delegateObject == null)
+        if (m_delegateObject == null) {
             return result;
+        }
         StackTraceElement[] elements = Thread.currentThread().getStackTrace();
         if (-1 == stackDeep) {
             String activityClassName = QtActivity.class.getCanonicalName();
-            for (int it=0;it<elements.length;it++)
+            for (int it = 0; it < elements.length; it++)
                 if (elements[it].getClassName().equals(activityClassName)) {
                     stackDeep = it;
                     break;
                 }
         }
-        final String methodName=elements[stackDeep].getMethodName();
-        if (-1 == stackDeep || !m_delegateMethods.containsKey(methodName))
+        final String methodName = elements[stackDeep].getMethodName();
+        if (-1 == stackDeep || !m_delegateMethods.containsKey(methodName)) {
             return result;
+        }
 
         for (Method m : m_delegateMethods.get(methodName)) {
             if (m.getParameterTypes().length == args.length) {
@@ -147,8 +149,7 @@ public class QtApplication extends Application
         return result;
     }
 
-    public static Object invokeDelegateMethod(Method m, Object... args)
-    {
+    public static Object invokeDelegateMethod(Method m, Object... args) {
         try {
             return m.invoke(m_delegateObject, args);
         } catch (Exception e) {
